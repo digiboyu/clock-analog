@@ -109,18 +109,18 @@
 <body>
   <div class="clock" id="clock"></div>
   <div class="digital-time" id="digitalTime">--:--</div>
-  <div id="timer">Time left: 15s</div>
+  <div id="timer">Kalan zaman: 40s</div>
   <div class="level-select">
-    <label for="level">Choose Level:</label>
+    <label for="level">Seviye seçin:</label>
     <select id="level">
-      <option value="1">Level 1 – Full Hours</option>
-      <option value="2">Level 2 – Half Hours</option>
-      <option value="3">Level 3 – Quarters and Others</option>
+      <option value="1">1. Seviye – Tam saatler</option>
+      <option value="2">2. Seviye – Buçuk</option>
+      <option value="3">3. Seviye – Çeyrek</option>
     </select>
   </div>
   <div class="controls">
-    <button id="applyBtn" onclick="checkAnswer()">Apply</button>
-    <button id="playBtn" onclick="togglePlay()">PLAY</button>
+    <button id="applyBtn" onclick="checkAnswer()">Uygula</button>
+    <button id="playBtn" onclick="togglePlay()">OYNA</button>
   </div>
   <script>
     const clock = document.getElementById('clock');
@@ -210,12 +210,12 @@
     }
 
     function startTimer() {
-      let timeLeft = 15;
-      timerEl.textContent = `Time left: ${timeLeft}s`;
+      let timeLeft = 40;
+      timerEl.textContent = `Kalan zaman: ${timeLeft}s`;
       clearInterval(countdown);
       countdown = setInterval(() => {
         timeLeft--;
-        timerEl.textContent = `Time left: ${timeLeft}s`;
+        timerEl.textContent = `Kalan zaman: ${timeLeft}s`;
         if (timeLeft <= 0) {
           clearInterval(countdown);
           checkAnswer();
@@ -235,7 +235,7 @@
 
     function togglePlay() {
       isPlaying = !isPlaying;
-      playBtn.textContent = isPlaying ? 'STOP' : 'PLAY';
+      playBtn.textContent = isPlaying ? 'DUR' : 'OYNA';
       playBtn.classList.toggle('active', isPlaying);
       if (isPlaying) {
         applyBtn.disabled = false;
@@ -246,7 +246,7 @@
         if (hourHand) hourHand.remove();
         if (minuteHand) minuteHand.remove();
         digitalTime.textContent = '--:--';
-        timerEl.textContent = 'Time left: 15s';
+        timerEl.textContent = 'Kalan zaman: 40s';
         applyBtn.disabled = true;
         selectedHour = null;
         selectedMinute = null;
