@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn the Clock Game</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #f0f8ff;
+      margin: 0;
+    }
+    .clock {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border: 10px solid #333;
+      border-radius: 50%;
+      background: white;
+      transition: background 0.3s ease;
+    }
+    .number {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      font-weight: bold;
+      font-size: 1.4em;
+      border-radius: 50%;
+      background: skyblue;
+      cursor: pointer;
+      user-select: none;
+    }
+    .number:hover {
+      background: deepskyblue;
+    }
+    .hand {
+      position: absolute;
+      width: 6px;
+      top: 50%;
+      left: 50%;
+      transform-origin: bottom;
+      transform: rotate(0deg);
+    }
+    .hour-hand {
+      height: 70px;
+      background: red;
+    }
+    .minute-hand {
+      height: 100px;
+      background: orange;
+    }
+    .digital-time {
+      margin-top: 20px;
+      font-size: 2em;
+      font-weight: bold;
+      color: #222;
+    }
+    .level-select,
+    .controls {
+      margin-top: 20px;
+    }
+    #level {
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 2px solid #00bfff;
+      background-color: white;
+    }
+    #applyBtn {
+      padding: 12px 24px;
+      font-size: 1.2em;
+      background-color: skyblue;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #applyBtn:hover {
+      background-color: deepskyblue;
+    }
+    #playBtn {
+      padding: 14px 28px;
+      font-size: 1.2em;
+      background-color: limegreen;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #playBtn.active {
+      background-color: orange;
+    }
+    #timer {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="clock" id="clock"></div>
+  <div class="digital-time" id="digitalTime">--:--</div>
+  <div id="timer">Time left: 15s</div>
+  <div class="level-select">
+    <label for="level">Choose Level:</label>
+    <select id="level">
+      <option value="1">Level 1 – Full Hours</option>
+      <option value="2">Level 2 – Half Hours</option>
+      <option value="3">Level 3 – Quarters and Others</option>
+    </select>
+  </div>
+  <div class="controls">
+    <button id="applyBtn" onclick="checkAnswer()">Apply</button>
+    <button id="playBtn" onclick="togglePlay()">PLAY</button>
+  </div>
+  <script>
+    const clock = document.getElementById('clock');
+    const digitalTime = document.getElementById('digitalTime');
+    const timerEl = document.getElementById('timer');
+    const playBtn = document.getElementById('playBtn');
+    const applyBtn = document.getElementById('applyBtn');
+
+    let selectedHour = null;
+    let selectedMinute = null;
+    let targetHour = 0;
+    let targetMinute = 0;
+    let hourHand, minuteHand;
+    let countdown;
+    let isPlaying = false;
+
+    function createClockFace() {
+      for (let i = 1; i <= 12; i++) {
+        const angle = (i * 30 - 90) * (Math.PI / 180);
+        const x = 150 + Math.cos(angle) * 120;
+        const y = 150 + Math.sin(angle) * 120;
+        const numberEl = document.createElement('div');
+        numberEl.classList.add('number');
+        numberEl.style.left = `${x - 20}px`;
+        numberEl.style.top = `${y - 20}px`;
+        numberEl.innerText = i;
+        numberEl.onclick = () => handleClick(i);
+        clock.appendChild(numberEl);
+      }
+    }
+
+    function handleClick(i) {
+      if (!isPlaying) return;
+      if (selectedHour === null || (selectedHour !== null && selectedMinute !== null)) {
+        selectedHour = i;
+        selectedMinute = null;
+        if (minuteHand) minuteHand.remove();
+        updateHand('hour', i * 30);
+      } else {
+        const minutes = [0, 15, 30, 45];
+        const base = i % 12;
+        const minuteValue = base * 5;
+        const closest = minutes.reduce((prev, curr) => Math.abs(curr - minuteValue) < Math.abs(prev - minuteValue) ? curr : prev);
+        selectedMinute = closest;
+        updateHand('minute', selectedMinute * 6);
+      }
+    }
+
+    function updateHand(type, angle) {
+      if (type === 'hour') {
+        if (hourHand) hourHand.remove();
+        hourHand = document.createElement('div');
+        hourHand.className = 'hand hour-hand';
+        hourHand.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+        clock.appendChild(hourHand);
+      } else {
+        if (minuteHand) minuteHand.remove();
+        minuteHand = document.createElement('div');
+        minuteHand.className = 'hand minute-hand';
+        minuteHand.style.transform = `translate(-50%, -100%) rotate(${angle}deg)`;
+        clock.appendChild(minuteHand);
+      }
+    }
+
+    function setRandomTime() {
+      selectedHour = null;
+      selectedMinute = null;
+      if (hourHand) hourHand.remove();
+      if (minuteHand) minuteHand.remove();
+      clock.style.background = 'white';
+
+      const level = parseInt(document.getElementById('level').value);
+      if (level === 1) {
+        targetHour = Math.floor(Math.random() * 12) + 1;
+        targetMinute = 0;
+      } else if (level === 2) {
+        targetHour = Math.floor(Math.random() * 12) + 1;
+        targetMinute = 30;
+      } else {
+        targetHour = Math.floor(Math.random() * 12) + 1;
+        const choices = [0, 15, 30, 45];
+        targetMinute = choices[Math.floor(Math.random() * choices.length)];
+      }
+      digitalTime.textContent = `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`;
+      applyBtn.disabled = false;
+      startTimer();
+    }
+
+    function startTimer() {
+      let timeLeft = 15;
+      timerEl.textContent = `Time left: ${timeLeft}s`;
+      clearInterval(countdown);
+      countdown = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          checkAnswer();
+        }
+      }, 1000);
+    }
+
+    function checkAnswer() {
+      clearInterval(countdown);
+      const correct = (selectedHour === targetHour && selectedMinute === targetMinute);
+      clock.style.background = correct ? '#b2f7b2' : '#f7b2b2';
+      applyBtn.disabled = true;
+      setTimeout(() => {
+        if (isPlaying) setRandomTime();
+      }, 1500);
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? 'STOP' : 'PLAY';
+      playBtn.classList.toggle('active', isPlaying);
+      if (isPlaying) {
+        applyBtn.disabled = false;
+        setRandomTime();
+      } else {
+        clearInterval(countdown);
+        clock.style.background = 'white';
+        if (hourHand) hourHand.remove();
+        if (minuteHand) minuteHand.remove();
+        digitalTime.textContent = '--:--';
+        timerEl.textContent = 'Time left: 15s';
+        applyBtn.disabled = true;
+        selectedHour = null;
+        selectedMinute = null;
+      }
+    }
+
+    createClockFace();
+  </script>
+</body>
+</html>
